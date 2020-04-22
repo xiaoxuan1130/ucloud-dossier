@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.epipe.ucloud.dossier.modules.coderule.mapper.CodeRuleMapper">
+    
+	<sql id="codeRuleColumns">
+		a.id AS "id",
+		a.code AS "code",
+		a.prefix AS "prefix",
+		a.middle_date AS "middleDate",
+		v.label as "name",
+		a.last_serial_bit AS "lastSerialBit",
+		a.last_serial_start_no AS "lastSerialStartNo",
+		a.current_serial_no AS "currentSerialNo",
+		a.example AS "example",
+		a.status AS "status",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.company_id as "companyId"
+	</sql>
+	
+	<sql id="codeRuleJoins">
+		left join sys_dict_value v on a.code=v.value
+		left join sys_dict_type t on t.id=v.dict_type_id
+	</sql>
+	
+    
+	<select id="get" resultType="CodeRule" >
+		SELECT 
+			<include refid="codeRuleColumns"/>
+		FROM code_rule a
+		<include refid="codeRuleJoins"/>
+		WHERE a.id = #{id} and t.type='code_rule'
+	</select>
+	
+	<select id="findList" resultType="CodeRule" >
+		SELECT 
+			<include refid="codeRuleColumns"/>
+		FROM code_rule a
+		<include refid="codeRuleJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		    and a.status = '1'
+			${dataScope}
+			<if test="code != null and code != ''">
+				AND a.code = #{code}
+			</if>
+			<if test="companyId != null and companyId != ''">
+				AND a.company_id = #{companyId}
+			</if>
+			<if test="name != null and name != ''">
+				AND v.label LIKE
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			and t.type='code_rule'
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="CodeRule" >
+		SELECT 
+			<include refid="codeRuleColumns"/>
+		FROM code_rule a
+		<include refid="codeRuleJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO code_rule(
+			id,
+			code,
+			prefix,
+			middle_date,
+			last_serial_bit,
+			last_serial_start_no,
+		    current_serial_no,
+			example,
+			status,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			company_id
+		) VALUES (
+			#{id},
+			#{code},
+			#{prefix},
+			#{middleDate},
+			#{lastSerialBit},
+			#{lastSerialStartNo},
+		    #{currentSerialNo},
+			#{example},
+			#{status},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{companyId}
+		)
+	</insert>
+
+	<insert id="sync">
+		INSERT INTO code_rule(
+			id,
+			code,
+			prefix,
+			middle_date,
+			last_serial_bit,
+			last_serial_start_no,
+		    current_serial_no,
+			example,
+			status,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			company_id
+		) select
+			REPLACE(UUID(),'-',''),
+			code,
+			prefix,
+			middle_date,
+			last_serial_bit,
+			last_serial_start_no,
+		    0,
+			example,
+			status,
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			remarks,
+			del_flag,
+			#{companyId}
+			from code_rule
+			where del_flag='0' and company_id=#{defaultCompanyId}
+	</insert>
+
+
+
+	
+	<update id="update">
+		UPDATE code_rule SET 	
+			code = #{code},
+			prefix = #{prefix},
+			middle_date = #{middleDate},
+			last_serial_bit = #{lastSerialBit},
+			last_serial_start_no = #{lastSerialStartNo},
+		    current_serial_no = #{currentSerialNo},
+			example = #{example},
+			status = #{status},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			company_id=#{companyId}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM code_rule
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE code_rule SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="CodeRule" statementType="STATEMENT">
+		select * FROM code_rule  where ${propertyName} = '${value}'
+	</select>
+
+	<select id="findByCode" resultType="CodeRule">
+		select <include refid="codeRuleColumns"/> from  code_rule a
+		<include refid="codeRuleJoins"/>
+		where a.code = #{code} and a.company_id=#{companyId}
+	</select>
+
+</mapper>

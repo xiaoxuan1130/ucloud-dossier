@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.sys.mapper.MenuTypeMapper">
+	
+     <resultMap id="menuResult" type="com.jeeplus.modules.sys.entity.MenuType">
+		<result property="menuId" column="menu_id" />
+		<result property="menuTypeCode" column="menu_type_code" />
+	</resultMap>
+    
+	<sql id="columns">
+		a.menu_id as "menuId",
+		a.menu_type_code AS "menuTypeCode"
+	</sql>
+	
+	<sql id="menuJoins">
+		LEFT JOIN sys_menu p ON p.id = a.menu_id
+    </sql>
+
+	<insert id="insert">
+		INSERT INTO sys_menu_type(
+			menu_id,
+			menu_type_code
+		) VALUES (
+			#{menuId},
+			#{menuTypeCode}
+		)
+	</insert>
+
+	
+	<update id="deleteByMenuId">
+		DELETE FROM sys_menu_type
+		WHERE menu_id = #{menuId}
+	</update>
+
+
+	<select id="findListByMenuId" resultMap="menuResult">
+		select <include refid="columns" />
+		from sys_menu_type a where a.menu_id = #{menuId}
+	</select>
+	
+</mapper>

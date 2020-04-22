@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.epipe.ucloud.dossier.modules.dossiermanager.mapper.DossierManagerMapper">
+    
+	<sql id="dossierManagerColumns">
+		a.id AS "id",
+		a.company_id AS "companyId",
+		a.belong_company AS "belongCompany.id",
+		belongCompany.name as "belongCompany.name",
+		a.manager_id AS "manager.id",
+		manager.name as "manager.name",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="dossierManagerJoins">
+		
+		LEFT JOIN sys_office belongCompany ON belongCompany.id = a.belong_company
+		LEFT JOIN sys_user manager ON manager.id = a.manager_id
+	</sql>
+	
+    
+	<select id="get" resultType="DossierManager" >
+		SELECT 
+			<include refid="dossierManagerColumns"/>
+		FROM dossier_manager a
+		<include refid="dossierManagerJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DossierManager" >
+		SELECT 
+			<include refid="dossierManagerColumns"/>
+		FROM dossier_manager a
+		<include refid="dossierManagerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="belongCompany != null and belongCompany.id != null and belongCompany.id != ''">
+				AND a.belong_company = #{belongCompany.id}
+			</if>
+			<if test="manager != null and manager.id != null and manager.id != ''">
+				AND a.manager_id = #{manager.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DossierManager" >
+		SELECT 
+			<include refid="dossierManagerColumns"/>
+		FROM dossier_manager a
+		<include refid="dossierManagerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dossier_manager(
+			id,
+			company_id,
+			belong_company,
+			manager_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{companyId},
+			#{belongCompany.id},
+			#{manager.id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dossier_manager SET 	
+			company_id = #{companyId},
+			belong_company = #{belongCompany.id},
+			manager_id = #{manager.id},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dossier_manager
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE dossier_manager SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="DossierManager" statementType="STATEMENT">
+		select * FROM dossier_manager  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>
